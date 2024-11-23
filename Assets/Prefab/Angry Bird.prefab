@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2649301620301779252}
   - component: {fileID: 2081026674795400379}
   - component: {fileID: 2496647749463066487}
+  - component: {fileID: 2263597138323408803}
   m_Layer: 0
   m_Name: Angry Bird
   m_TagString: Untagged
@@ -94,7 +95,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1854558493083660541}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -148,3 +149,15 @@ CircleCollider2D:
   m_Offset: {x: 0.03221637, y: -0.038791195}
   serializedVersion: 2
   m_Radius: 0.17897654
+--- !u!114 &2263597138323408803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1854558493083660541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d2a8cc0d94ac8439924940f409c0eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -17,12 +15,14 @@ public class SlingShotHandler : MonoBehaviour
 
     [Header("Slingshot Stats")]
     [SerializeField] private float _maxDistance = 3.5f;
+    [SerializeField] private float _shotForce = 5f;
 
     [Header("Scripts")]
     [SerializeField] private SlingShotArea _slingShotArea;
 
     [Header("Bird")]
-    [SerializeField] private GameObject _angryBirdPrefab;
+    [SerializeField] private AngryBird _angryBirdPrefab;
+    [SerializeField] private float _angieBirdPostionOffset = 2f;
 
     private Vector2 _slingShotLinesPosition;
 
@@ -31,7 +31,7 @@ public class SlingShotHandler : MonoBehaviour
 
     private bool _clickedWithinArea;
 
-    private GameObject _spawnedAngryBird;
+    private AngryBird _spawnedAngryBird;
 
     private void Awake()
     {
@@ -44,7 +44,7 @@ public class SlingShotHandler : MonoBehaviour
     private void Update()
     {
         if (Mouse.current.leftButton.wasPressedThisFrame && _slingShotArea.IsWithinSlingshotArea())
-        { 
+        {
             _clickedWithinArea = true;
         }
 
@@ -54,9 +54,11 @@ public class SlingShotHandler : MonoBehaviour
             PositionAndRotateAngryBird();
         }
 
-        if(Mouse.current.leftButton.wasReleasedThisFrame)
+        if (Mouse.current.leftButton.wasReleasedThisFrame)
         {
             _clickedWithinArea = false;
+
+            _spawnedAngryBird.LaunchBird(_direction, _shotForce);
         }
 
     }
@@ -100,12 +102,19 @@ public class SlingShotHandler : MonoBehaviour
     {
         SetLines(_idlePosition.position);
 
+        Vector2 dir = (_centerPosition.position - _idlePosition.position).normalized;
+        Vector2 spawnPosition = (Vector2)_idlePosition.position + dir * _angieBirdPostionOffset;
+
         _spawnedAngryBird = Instantiate(_angryBirdPrefab, _idlePosition.position, Quaternion.identity);
+
+        _spawnedAngryBird.transform.right = dir;
     }
 
-    private void PositionAndRotateAngryBird() 
+    private void PositionAndRotateAngryBird()
     {
-        _spawnedAngryBird.transform.position = _slingShotLinesPosition;
+        _spawnedAngryBird.transform.position = _slingShotLinesPosition + _directionNormalized * _angieBirdPostionOffset;
+        _spawnedAngryBird.transform.right = _directionNormalized;
+
     }
 
     #endregion
