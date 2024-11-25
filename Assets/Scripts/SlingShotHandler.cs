@@ -1,8 +1,10 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class SlingShotHandler : MonoBehaviour
 {
+    #region Variables
     [Header("Line Renderers")]
     [SerializeField] private LineRenderer _leftLineRenderer;
     [SerializeField] private LineRenderer _rightLineRenderer;
@@ -16,6 +18,7 @@ public class SlingShotHandler : MonoBehaviour
     [Header("Slingshot Stats")]
     [SerializeField] private float _maxDistance = 3.5f;
     [SerializeField] private float _shotForce = 5f;
+    [SerializeField] private float _timeBetweenBirdRespond = 2f;
 
     [Header("Scripts")]
     [SerializeField] private SlingShotArea _slingShotArea;
@@ -30,8 +33,10 @@ public class SlingShotHandler : MonoBehaviour
     private Vector2 _directionNormalized;
 
     private bool _clickedWithinArea;
+    private bool _birdOnSlingShot;
 
     private AngryBird _spawnedAngryBird;
+    #endregion
 
     private void Awake()
     {
@@ -48,17 +53,33 @@ public class SlingShotHandler : MonoBehaviour
             _clickedWithinArea = true;
         }
 
-        if (Mouse.current.leftButton.isPressed && _clickedWithinArea)
+        if (Mouse.current.leftButton.isPressed && _clickedWithinArea && _birdOnSlingShot)
         {
             DrawSlingShot();
             PositionAndRotateAngryBird();
         }
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame)
+        if (Mouse.current.leftButton.wasReleasedThisFrame && _birdOnSlingShot)
         {
-            _clickedWithinArea = false;
+            if (GameManager.instance.HaseEnoughShots())
+            {
+                _clickedWithinArea = false;
 
-            _spawnedAngryBird.LaunchBird(_direction, _shotForce);
+                _spawnedAngryBird.LaunchBird(_direction, _shotForce);
+
+                GameManager.instance.UseShot();
+
+                _birdOnSlingShot = false;
+
+                SetLines(_centerPosition.position);
+
+                if (GameManager.instance.HaseEnoughShots())
+                {
+                    StartCoroutine(SpawnAngryBirdAfterTime());
+                }
+
+            }
+
         }
 
     }
@@ -105,9 +126,11 @@ public class SlingShotHandler : MonoBehaviour
         Vector2 dir = (_centerPosition.position - _idlePosition.position).normalized;
         Vector2 spawnPosition = (Vector2)_idlePosition.position + dir * _angieBirdPostionOffset;
 
-        _spawnedAngryBird = Instantiate(_angryBirdPrefab, _idlePosition.position, Quaternion.identity);
+        _spawnedAngryBird = Instantiate(_angryBirdPrefab, spawnPosition, Quaternion.identity);
 
         _spawnedAngryBird.transform.right = dir;
+
+        _birdOnSlingShot = true;
     }
 
     private void PositionAndRotateAngryBird()
@@ -115,6 +138,13 @@ public class SlingShotHandler : MonoBehaviour
         _spawnedAngryBird.transform.position = _slingShotLinesPosition + _directionNormalized * _angieBirdPostionOffset;
         _spawnedAngryBird.transform.right = _directionNormalized;
 
+    }
+
+    private IEnumerator SpawnAngryBirdAfterTime()
+    {
+        yield return new WaitForSeconds(_timeBetweenBirdRespond);
+
+        SpawningAngryBird();
     }
 
     #endregion
