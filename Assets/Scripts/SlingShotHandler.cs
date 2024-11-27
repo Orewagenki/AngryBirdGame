@@ -1,6 +1,6 @@
+using DG.Tweening;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class SlingShotHandler : MonoBehaviour
 {
@@ -14,18 +14,30 @@ public class SlingShotHandler : MonoBehaviour
     [SerializeField] private Transform _rightStartPosition;
     [SerializeField] private Transform _centerPosition;
     [SerializeField] private Transform _idlePosition;
+    [SerializeField] private Transform _elasticTransform;
+
 
     [Header("Slingshot Stats")]
     [SerializeField] private float _maxDistance = 3.5f;
     [SerializeField] private float _shotForce = 5f;
     [SerializeField] private float _timeBetweenBirdRespond = 2f;
+    [SerializeField] private float _elasticDivider = 1.2f;
+    [SerializeField] private AnimationCurve _elasticCurve;
+    [SerializeField] private float _maxAnimationTime = 1.0f;
+
 
     [Header("Scripts")]
     [SerializeField] private SlingShotArea _slingShotArea;
+    [SerializeField] private CameraManager _cameraManager;
+
 
     [Header("Bird")]
     [SerializeField] private AngryBird _angryBirdPrefab;
     [SerializeField] private float _angieBirdPostionOffset = 2f;
+
+    [Header("Sounds")]
+    [SerializeField] private AudioClip _elasticPulledClip;
+    [SerializeField] private AudioClip[] _elasticReleasedClips;
 
     private Vector2 _slingShotLinesPosition;
 
@@ -36,10 +48,14 @@ public class SlingShotHandler : MonoBehaviour
     private bool _birdOnSlingShot;
 
     private AngryBird _spawnedAngryBird;
+
+    private AudioSource _audioSource;
     #endregion
 
     private void Awake()
     {
+        _audioSource = GetComponent<AudioSource>();
+
         _leftLineRenderer.enabled = false;
         _rightLineRenderer.enabled = false;
 
@@ -48,18 +64,24 @@ public class SlingShotHandler : MonoBehaviour
 
     private void Update()
     {
-        if (Mouse.current.leftButton.wasPressedThisFrame && _slingShotArea.IsWithinSlingshotArea())
+        if (InputManager.WasLeftMouseButtonPressed && _slingShotArea.IsWithinSlingshotArea())
         {
             _clickedWithinArea = true;
+
+            if (_birdOnSlingShot)
+            {
+                SoundManager.instance.PlayClip(_elasticPulledClip, _audioSource);
+                _cameraManager.SwitchToFollowCam(_spawnedAngryBird.transform);
+            }
         }
 
-        if (Mouse.current.leftButton.isPressed && _clickedWithinArea && _birdOnSlingShot)
+        if (InputManager.IsLeftMousePressed && _clickedWithinArea && _birdOnSlingShot)
         {
             DrawSlingShot();
             PositionAndRotateAngryBird();
         }
 
-        if (Mouse.current.leftButton.wasReleasedThisFrame && _birdOnSlingShot)
+        if (InputManager.WasLeftMouseButtonReleased && _birdOnSlingShot && _clickedWithinArea)
         {
             if (GameManager.instance.HaseEnoughShots())
             {
@@ -67,11 +89,12 @@ public class SlingShotHandler : MonoBehaviour
 
                 _spawnedAngryBird.LaunchBird(_direction, _shotForce);
 
+                SoundManager.instance.PlayRandomClip(_elasticReleasedClips, _audioSource);
+
                 GameManager.instance.UseShot();
+                AnimateSlingShot();
 
                 _birdOnSlingShot = false;
-
-                SetLines(_centerPosition.position);
 
                 if (GameManager.instance.HaseEnoughShots())
                 {
@@ -89,7 +112,7 @@ public class SlingShotHandler : MonoBehaviour
     private void DrawSlingShot()
     {
 
-        Vector3 touchPosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+        Vector3 touchPosition = Camera.main.ScreenToWorldPoint(InputManager.MousePosition);
 
         _slingShotLinesPosition = _centerPosition.position + Vector3.ClampMagnitude(touchPosition - _centerPosition.position, _maxDistance);
 
@@ -121,6 +144,7 @@ public class SlingShotHandler : MonoBehaviour
 
     private void SpawningAngryBird()
     {
+        _elasticTransform.DOComplete();
         SetLines(_idlePosition.position);
 
         Vector2 dir = (_centerPosition.position - _idlePosition.position).normalized;
@@ -145,6 +169,36 @@ public class SlingShotHandler : MonoBehaviour
         yield return new WaitForSeconds(_timeBetweenBirdRespond);
 
         SpawningAngryBird();
+
+        _cameraManager.SwitchToIdleCam();
+    }
+
+    #endregion
+
+    #region Animate Slingshot
+    private void AnimateSlingShot()
+    {
+        _elasticTransform.position = _leftLineRenderer.GetPosition(0);
+
+        float distance = Vector2.Distance(_elasticTransform.position, _centerPosition.position);
+
+        float time = distance / _elasticDivider;
+
+        _elasticTransform.DOMove(_centerPosition.position, time).SetEase(_elasticCurve);
+        StartCoroutine(AnimateSlingShotLines(_elasticTransform, time));
+    }
+
+    private IEnumerator AnimateSlingShotLines(Transform trans, float time)
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < time && elapsedTime < _maxAnimationTime)
+        {
+            elapsedTime += Time.deltaTime;
+
+            SetLines(trans.position);
+
+            yield return null;
+        }
     }
 
     #endregion

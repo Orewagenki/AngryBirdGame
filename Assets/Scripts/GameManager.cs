@@ -1,7 +1,9 @@
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,6 +13,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float _secondsToWaitDeathCheck = 3f;
     [SerializeField] private GameObject _restartScreenObject;
     [SerializeField] private SlingShotHandler _slingShotHandler;
+    [SerializeField] private Image _nextLevelimage;
+
 
     private int _usedNumberOfShots;
 
@@ -93,11 +97,26 @@ public class GameManager : MonoBehaviour
     {
         _restartScreenObject.SetActive(true);
         _slingShotHandler.enabled = false;
+
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        int maxLevels = SceneManager.sceneCountInBuildSettings;
+
+        if (currentSceneIndex + 1 < maxLevels)
+        {
+            _nextLevelimage.enabled = true;
+        }
     }
 
     public void RestartGame()
     {
+        DOTween.Clear(true);
+
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
+    public void NextLevel()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+    }
+
     #endregion
 }
