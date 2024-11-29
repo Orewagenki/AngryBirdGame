@@ -818,7 +818,7 @@ MonoBehaviour:
   _secondsToWaitDeathCheck: 3
   _restartScreenObject: {fileID: 813202530}
   _slingShotHandler: {fileID: 1915653030}
-  _nextLevelimage: {fileID: 0}
+  _nextLevelImage: {fileID: 332130592}
 --- !u!114 &630494608
 MonoBehaviour:
   m_ObjectHideFlags: 0

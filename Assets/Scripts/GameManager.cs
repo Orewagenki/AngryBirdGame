@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float _secondsToWaitDeathCheck = 3f;
     [SerializeField] private GameObject _restartScreenObject;
     [SerializeField] private SlingShotHandler _slingShotHandler;
-    [SerializeField] private Image _nextLevelimage;
+    [SerializeField] private Image _nextLevelImage;
 
 
     private int _usedNumberOfShots;
@@ -37,6 +37,8 @@ public class GameManager : MonoBehaviour
         {
             _baddies.Add(baddies[i]);
         }
+
+        _nextLevelImage.enabled = false;
     }
 
     public void UseShot()
@@ -103,15 +105,23 @@ public class GameManager : MonoBehaviour
 
         if (currentSceneIndex + 1 < maxLevels)
         {
-            _nextLevelimage.enabled = true;
+            _nextLevelImage.enabled = true;
         }
     }
 
     public void RestartGame()
     {
         DOTween.Clear(true);
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        if (currentSceneIndex != 0)
+        {
+            SceneManager.LoadScene(0);
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
     }
     public void NextLevel()
     {
